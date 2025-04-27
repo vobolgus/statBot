@@ -31,16 +31,12 @@ A Telegram bot that tracks message statistics in a chat and generates visualizat
 5. (Optional) Get API keys for AI models:
    - Google API key for Gemini from [Google AI Studio](https://ai.google.dev/)
    - X.AI API key for Grok from [X.AI](https://x.ai/)
-6. Update configuration variables in the code or environment:
-   ```python
-   API_ID = your_api_id
-   API_HASH = 'your_api_hash'
-   BOT_TOKEN = 'your_bot_token'
-   CHAT_ID = your_chat_id
-   GOOGLE_API_KEY = 'your_gemini_api_key'  # Optional, for Gemini summaries
-   XAI_API_KEY = 'your_xai_api_key'  # Optional, for Grok summaries
-   DEFAULT_AI_MODEL = 'gemini'  # or 'xai', defaults to 'gemini'
+6. Copy the `.env.example` file to `.env` and fill in your credentials:
+   ```bash
+   cp .env.example .env
+   # then edit .env and set your API_ID, API_HASH, BOT_TOKEN, CHAT_ID, etc.
    ```
+   The bot loads these variables automatically via `python-dotenv`.
 
 ## Dependencies
 
@@ -51,6 +47,7 @@ A Telegram bot that tracks message statistics in a chat and generates visualizat
 - kaleido (for exporting plotly charts to images)
 - google-generativeai (for Gemini AI summaries)
 - openai (for Grok AI summaries via OpenAI-compatible API)
+- python-dotenv (for loading .env configuration)
 
 Install dependencies:
 ```

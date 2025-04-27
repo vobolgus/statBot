@@ -5,3 +5,4 @@ python-dateutil>=2.8.2
 kaleido>=0.2.1
 google-generativeai>=0.3.0
 openai>=1.10.0
+python-dotenv>=0.21.0
