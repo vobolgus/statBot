@@ -16,6 +16,13 @@ API_HASH = os.getenv("API_HASH")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = int(os.getenv("CHAT_ID"))
 
+# Support multiple chats: parse CHAT_IDS env or fallback to CHAT_ID
+chat_ids_env = os.getenv("CHAT_IDS", "").strip()
+if chat_ids_env:
+    TELEGRAM_CHAT_IDS = [int(cid) for cid in chat_ids_env.split(',') if cid.strip()]
+else:
+    TELEGRAM_CHAT_IDS = [CHAT_ID]
+
 # AI API keys configuration
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 XAI_API_KEY = os.getenv("XAI_API_KEY", "")
@@ -34,9 +41,12 @@ USER_MAPPING = {
     'говно 27': 'Константин Телелюхин',
     'Святослав': 'Святослав Суглобов',
     'Ymnumi': 'Карина Кучма',
+    'Karina Kuchma': 'Карина Кучма',
     'Ваня': 'Иван Яхин',
     'Николай': 'Николай Гончар',
-    'Konst': 'говно 27',
+    'Konst': 'Константин Телелюхин',
     'Egor': 'Егор Житко',
     'иви ♥ любовь моя': 'Эвелина Абрамова',
+    'Максим 𒇻 𒊒𒁍𒌑 (Кузин)': 'Максим Кузин',
+    'Daniil Karchenko': 'Даниил Карченко',
 }

@@ -1,30 +1,25 @@
-import asyncio
-import os
-import re
-import logging
+"""
+Basic statistics command handlers.
+"""
 
+import os
+import logging
 import pandas as pd
 import plotly.express as px
-from telethon import TelegramClient, events
 
-from config import API_ID, API_HASH, BOT_TOKEN, CHAT_ID, DB_FILE, DEFAULT_AI_MODEL
-from db import load_db, save_db, message_exists, telethon_message_to_dict
-from analytics import (
+from src.core.config import DB_FILE
+from src.analytics.stats import (
     load_and_prepare_data,
     get_global_top_users,
     prepare_relative_data,
     prepare_cumulative_data,
     build_monthly_stats_text,
-    generate_funny_summary,
 )
-from plotting import plot_stacked_area
+from src.analytics.ai_summary import generate_funny_summary, get_model_emoji, get_model_name
+from src.visualization.plotting import plot_stacked_area
 
-# Logging setup
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
 logger = logging.getLogger(__name__)
+
 
 async def handle_global_stats(event, tokens):
     """Handle global stats command: /stats global N"""
@@ -49,6 +44,7 @@ async def handle_global_stats(event, tokens):
         )
         reply += f"{idx}. {user} — {count} messages\n"
     await event.respond(reply)
+
 
 async def handle_hourly_stats(event):
     """Handle hourly stats command: /stats hourly"""
@@ -83,6 +79,8 @@ async def handle_hourly_stats(event):
     await event.respond(reply)
     if os.path.exists(temp_file):
         await event.respond(file=temp_file, caption="Hourly activity histogram")
+        os.remove(temp_file)  # Cleanup
+
 
 async def handle_plot_command(event, tokens, client):
     """Handle plot command: /stats plot N FREQ"""
@@ -114,6 +112,8 @@ async def handle_plot_command(event, tokens, client):
     )
     if temp_file and os.path.exists(temp_file):
         await client.send_file(event.chat_id, temp_file, caption=caption)
+        os.remove(temp_file)  # Cleanup
+
 
 async def handle_monthly_stats(event, tokens, client):
     """Handle monthly stats command: /stats YYYY-MM [plot N] or /stats YYYY-MM funny"""
@@ -157,6 +157,7 @@ async def handle_monthly_stats(event, tokens, client):
                     event.chat_id, temp_file,
                     caption=f"Relative chart for {month_str}"
                 )
+                os.remove(temp_file)  # Cleanup
         elif tokens[2].lower() == "funny":
             # Get model if specified as the fourth token
             model = tokens[3].lower() if len(tokens) >= 4 else None
@@ -171,6 +172,7 @@ async def handle_monthly_stats(event, tokens, client):
             await event.respond(stats_text)
     else:
         await event.respond(stats_text)
+
 
 async def handle_funny_stats(event, tokens):
     """Handle funny stats command: /stats funny [model]"""
@@ -219,80 +221,3 @@ async def handle_funny_stats(event, tokens):
     model_emoji = get_model_emoji(model)
     model_name = get_model_name(model)
     await event.respond(f"{model_emoji} Funny Summary ({model_name}):\n\n{funny_summary}")
-
-def get_model_emoji(model):
-    """Get emoji for AI model."""
-    if model == "xai":
-        return "🤖"
-    else:  # gemini
-        return "🤪"
-
-def get_model_name(model):
-    """Get display name for AI model."""
-    if not model:
-        return DEFAULT_AI_MODEL
-    
-    if model == "xai":
-        return "Grok"
-    else:
-        return "Gemini"
-
-async def main():
-    """Main function to run the Telegram bot."""
-    db = load_db()
-    messages_db = db.get("messages", [])
-    client = TelegramClient('bot_session', API_ID, API_HASH)
-    await client.start(bot_token=BOT_TOKEN)
-    logger.info("Bot successfully started.")
-
-    @client.on(events.NewMessage(chats=CHAT_ID))
-    async def unified_handler(event):
-        message = event.message
-        if not message_exists(messages_db, message.id):
-            sender = await message.get_sender()
-            new_msg = telethon_message_to_dict(message, sender)
-            messages_db.append(new_msg)
-            messages_db.sort(key=lambda m: m.get("id", 0))
-            db["messages"] = messages_db
-            save_db(db)
-            logger.info(f"Saved new message, id: {message.id}")
-
-        if message.message.startswith("/stats"):
-            tokens = message.message.split()
-            if len(tokens) < 2:
-                await event.respond(
-                    "Invalid command format. Examples:\n"
-                    "/stats global 9\n"
-                    "/stats 2025-02\n"
-                    "/stats 2025-02 plot 9\n"
-                    "/stats plot 8 Q\n"
-                    "/stats hourly\n"
-                    "/stats funny [gemini|xai]\n"
-                    "/stats 2025-02 funny [gemini|xai]"
-                )
-                return
-            cmd = tokens[1].lower()
-            if cmd == "global":
-                await handle_global_stats(event, tokens)
-            elif cmd == "hourly":
-                await handle_hourly_stats(event)
-            elif cmd == "plot":
-                await handle_plot_command(event, tokens, client)
-            elif cmd == "funny":
-                await handle_funny_stats(event, tokens)
-            elif re.match(r'^\d{4}-\d{2}$', cmd):
-                await handle_monthly_stats(event, tokens, client)
-            else:
-                await event.respond(
-                    "Invalid command format. Examples:\n"
-                    "/stats global 9\n"
-                    "/stats 2025-02\n"
-                    "/stats 2025-02 plot 9\n"
-                    "/stats plot 8 Q\n"
-                    "/stats hourly\n"
-                    "/stats funny [gemini|xai]\n"
-                    "/stats 2025-02 funny [gemini|xai]"
-                )
-
-    logger.info("Bot waiting for messages...")
-    await client.run_until_disconnected()

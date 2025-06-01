@@ -7,6 +7,7 @@ A Telegram bot that tracks message statistics in a chat and generates visualizat
 - Track and save all messages in a specified chat
 - Generate statistics for different time periods
 - Create charts showing user activity and message distribution
+- Build social interaction graphs based on reply patterns
 - Support for various commands to analyze chat data
 - Generate humorous summaries of chat statistics using multiple AI models:
   - Google's Gemini
@@ -19,6 +20,7 @@ A Telegram bot that tracks message statistics in a chat and generates visualizat
 - `/stats YYYY-MM plot N` - Show statistics for a specific month with a chart of top N users
 - `/stats plot N FREQ` - Generate a cumulative chart for all history (FREQ can be D, W, M, Q)
 - `/stats hourly` - Show message distribution by hour of day
+- `/stats graph [min_interactions]` - Show interaction graph between users (default: min 3 interactions)
 - `/stats funny [gemini|xai]` - Show global statistics with a humorous AI-generated summary
 - `/stats YYYY-MM funny [gemini|xai]` - Show monthly statistics with a humorous AI-generated summary
 
@@ -45,6 +47,7 @@ A Telegram bot that tracks message statistics in a chat and generates visualizat
 - plotly
 - python-dateutil
 - kaleido (for exporting plotly charts to images)
+- networkx (for social graph analysis)
 - google-generativeai (for Gemini AI summaries)
 - openai (for Grok AI summaries via OpenAI-compatible API)
 - python-dotenv (for loading .env configuration)
@@ -67,6 +70,7 @@ The bot can generate:
 - Monthly activity distribution by user charts
 - Cumulative message share over time charts
 - Hourly message distribution histograms
+- Interactive social graphs showing user interactions
 - Humorous AI-generated interpretations of the statistics (in Russian) using different language models:
   - 🤪 Gemini (default)
   - 🤖 Grok
