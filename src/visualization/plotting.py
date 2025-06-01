@@ -1,5 +1,6 @@
 import logging
 
+import fix_pillow  # Fix for Pillow 10+ compatibility
 import plotly.graph_objects as go
 import plotly.express as px
 
